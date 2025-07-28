@@ -1,47 +1,55 @@
 class Node:
     def __init__(self, key, value):
-        self.key, self.value = key, value
-        self.next = self.prev = None
+        self.key = key
+        self.val = value
+        self.prev = self.next = None
+    
 class LRUCache:
 
     def __init__(self, capacity: int):
         self.cap = capacity
-        self.cache = {}
         self.left = Node(0,0)
         self.right = Node(0,0)
         self.left.next = self.right
         self.right.prev = self.left
-        
-    def remove(self, node):
-        # Remove node from linked list
-        prev, nxt = node.prev, node.next
-        prev.next, nxt.prev = nxt, prev
-
+        self.cache = {}
+    
     def insert(self, node):
-        # Insert Node at Right
-        prev = self.right.prev
-        prev.next, self.right.prev = node, node
-        node.prev, node.next = prev, self.right
+        right, prev = self.right, self.right.prev
+
+        prev.next = node
+        node.prev = prev
+        node.next = right
+        right.prev = node
+    
+    def remove(self, node):
+        prev, nxt = node.prev, node.next
+        prev.next = nxt
+        nxt.prev = prev
+
 
     def get(self, key: int) -> int:
         if key in self.cache:
-            self.remove(self.cache[key])
-            self.insert(self.cache[key])
-            return self.cache[key].value
-        return -1
+            node = self.cache[key]
+            self.remove(node)
+            self.insert(node)
+            return node.val
+        else:
+            return -1
 
     def put(self, key: int, value: int) -> None:
         if key in self.cache:
             self.remove(self.cache[key])
-        self.cache[key] = Node(key, value)
-        self.insert(self.cache[key])
-
-        if len(self.cache) > self.cap:
+            del self.cache[key]
+        if self.cap == len(self.cache):
             lru = self.left.next
             self.remove(lru)
-            del self.cache[lru.key]
-
-        
+            lru_key = lru.key
+            del self.cache[lru_key]
+        mru = Node(key, value)
+        self.cache[key] = mru
+        self.insert(mru)
+            
 
 
 # Your LRUCache object will be instantiated and called as such:
